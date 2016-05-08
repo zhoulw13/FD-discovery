@@ -1,34 +1,41 @@
 #include "FDD.h"
 #include <algorithm>
+#include <map>
 
 FunctionalDependence::FunctionalDependence(int n, int s):dims(n), size(s) {
+}
+
+void FunctionalDependence::init(string **data) {
 	vector<neuron> L1;
 	for (int i = 0; i < dims; i++) {
 		neuron ni;
 		ni.components = 1 << i;
 		L1.push_back(ni);
 	}
-	level_set.push_back(L1);
-}
 
-void FunctionalDependence::init(string **data) {
-	vector<string> *temp;
-	temp = new vector<string>[dims];
+	map<string, int> *temp;
+	temp = new map<string, int>[dims];
+	int *index = new int[dims];
+	for (int i = 0; i < dims; i++) {
+		index[i] = 0;
+	}
 
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < dims; j++) {
-			int pos = find(temp[j].begin(), temp[j].end(), data[i][j]) - temp[j].begin();
-			if (pos < temp[j].size()) {
-				level_set[0][j].pi_set[pos].push_back(i+1);
+			map<string, int>::iterator it = temp[j].find(data[i][j]);
+			if (it == temp[j].end()) {
+				vector<int> t;
+				t.push_back(i + 1);
+				L1[j].pi_set.push_back(t);
+				temp[j].insert(pair<string, int>(data[i][j], index[j]++));
 			}
 			else {
-				vector<int> t;
-				t.push_back(i+1);
-				level_set[0][j].pi_set.push_back(t);
-				temp[j].push_back(data[i][j]);
+				L1[j].pi_set[it->second].push_back(i + 1);
 			}
 		}
 	}
+
+	level_set.push_back(L1);
 }
 
 void FunctionalDependence::generate_next_level(int n) {
