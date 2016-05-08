@@ -5,7 +5,7 @@ using namespace std;
 struct neuron {
 	vector<int> components; // sequence number 0-11
 	vector<int> RHS;
-	vector<string> pi_set;
+	vector<vector<int>> pi_set;
 
 	vector<neuron*> fathers;
 	vector<neuron*> sons;
