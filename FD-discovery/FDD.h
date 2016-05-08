@@ -3,8 +3,8 @@
 using namespace std;
 
 struct neuron {
-	vector<int> components; // sequence number 0-11
-	vector<int> RHS;
+	int components; // sequence number bit format
+	int RHS;
 	vector<vector<int>> pi_set;
 
 	vector<neuron*> fathers;
@@ -12,11 +12,12 @@ struct neuron {
 };
 
 class FunctionalDependence {
-	int dims;
+	int dims, size;
 	vector<vector<neuron>> level_set;
 
 public:
-	FunctionalDependence(int);
+	FunctionalDependence(int, int);
+	void init(string **data);
 	void generate_next_level(int n);
 	void compute_dependencies(int n);
 	void run();
