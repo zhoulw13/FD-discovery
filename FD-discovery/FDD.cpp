@@ -29,8 +29,6 @@ void FunctionalDependence::init(string **data) {
 			}
 		}
 	}
-
-	cout << size << " " << int(temp[0].end() - temp[0].begin()) << '\n';
 }
 
 void FunctionalDependence::generate_next_level(int n) {
