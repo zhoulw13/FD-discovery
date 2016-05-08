@@ -10,6 +10,7 @@ void FunctionalDependence::init(string **data) {
 	for (int i = 0; i < dims; i++) {
 		neuron ni;
 		ni.components = 1 << i;
+		ni.RHS = ~ni.components;
 		L1.push_back(ni);
 	}
 
