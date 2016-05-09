@@ -3,7 +3,7 @@
 using namespace std;
 
 struct neuron {
-	vector<int> components; // sequence number 0-11
+	int components; // sequence number 0-11
 	vector<int> RHS;
 	vector<vector<int>> pi_set;
 
