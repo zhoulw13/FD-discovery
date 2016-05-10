@@ -2,3 +2,5 @@ Debug
 *.opensdf
 *.sdf
 FD-discovery/Debug
+Release
+FD-discovery/Release
