@@ -45,7 +45,7 @@ void FunctionalDependence::init(string **data) {
 
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
-	const int maxNum = pow(2, dims) - 1;
+	const int maxNum = 1 << dims - 1;
 	char *flag = new char [maxNum];
 	int *TArray = new int [size]; 
 	vector<int> *SArray = new vector<int> [size];
@@ -81,22 +81,23 @@ void FunctionalDependence::generate_next_level(int n) {
 				}
 				// compute RHS+
 				ns.RHS = level_set[n][i].RHS & level_set[n][j].RHS;
-
-				level_set[n + 1].push_back(ns);
+				L.push_back(ns);
 			} else {
 				for (int l = 0; l < level_set[n + 1].size(); l++) {
 					if (level_set[n + 1][l].components == newComponents) {
 						level_set[n][i].sons.push_back(&level_set[n + 1][l]);
 						level_set[n][j].sons.push_back(&level_set[n + 1][l]);
-						level_set[n + 1][l].fathers.push_back(&(level_set[n][i]));
-						level_set[n + 1][l].fathers.push_back(&(level_set[n][j]));
-						level_set[n + 1][l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
+						L[l].fathers.push_back(&(level_set[n][i]));
+						L[l].fathers.push_back(&(level_set[n][j]));
+						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
 						break;
 					}
 				}
 			}			
 		}
 	}
+	level_set.push_back(L);
+
 	delete []flag;
 	delete []TArray;
 	delete []SArray;
@@ -138,7 +139,7 @@ void FunctionalDependence::compute_dependencies(int n) {
 
 void FunctionalDependence::run() {
 	for (int i = 1; i < dims; i++) {
-		generate_next_level(i);
+		generate_next_level(i-1);
 		compute_dependencies(i);
 	}
 	outputResult();

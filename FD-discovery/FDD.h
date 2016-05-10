@@ -6,7 +6,7 @@ struct neuron {
 	int components; // sequence number bit format
 	int RHS;
 
-	vector<vector<int>> pi_set;
+	vector<vector<int> > pi_set;
 
 	vector<neuron*> fathers;
 	vector<neuron*> sons;
@@ -19,7 +19,7 @@ struct fd{
 
 class FunctionalDependence {
 	int dims, size;
-	vector<vector<neuron>> level_set;
+	vector<vector<neuron> > level_set;
 	vector<fd> fd_set;
 
 public:
