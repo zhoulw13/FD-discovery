@@ -67,9 +67,7 @@ void FunctionalDependence::generate_next_level(int n) {
 				}
 				for (int l = 0; l < level_set[n][j].pi_set.size(); l++) {
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (TArray[level_set[n][j].pi_set[l][m]] != -1) {
-							SArray[TArray[level_set[n][j].pi_set[l][m]]].push_back(level_set[n][j].pi_set[l][m]);
-						}
+						SArray[TArray[level_set[n][j].pi_set[l][m]]].push_back(level_set[n][j].pi_set[l][m]);
 					}
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
 						if (SArray[TArray[level_set[n][j].pi_set[l][m]]].size() > 0) {
