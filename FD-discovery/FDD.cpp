@@ -17,9 +17,7 @@ void FunctionalDependence::init(string **data) {
 	map<string, int> *temp;
 	temp = new map<string, int>[dims];
 	int *index = new int[dims];
-	for (int i = 0; i < dims; i++) {
-		index[i] = 0;
-	}
+	memset(index, 0, sizeof(int) * dims);
 
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < dims; j++) {
@@ -37,6 +35,9 @@ void FunctionalDependence::init(string **data) {
 	}
 
 	level_set.push_back(L1);
+
+	delete []index;
+	return;
 }
 
 void FunctionalDependence::generate_next_level(int n) {
