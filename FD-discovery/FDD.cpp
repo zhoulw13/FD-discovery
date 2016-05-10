@@ -100,12 +100,76 @@ void FunctionalDependence::generate_next_level(int n) {
 }
 
 void FunctionalDependence::compute_dependencies(int n) {
-
+	vector<neuron>::iterator it;
+	int x_pi_length, x_minus_e_pi_length, e;
+	for(it=level_set[n].begin();it!=level_set[n].end();it++){
+		int X = it->components;
+		int e_set = X & it->RHS;
+		int e_tag = 1;
+		x_pi_length = it->pi_set.size(); 
+		for(i=0;i<dims;i++){
+			e = e_set & e_tag;
+			if(e != 0){
+				int x_minus_e = X - e;
+				int father_num = (it->fathers).size();
+				for(j=0;j<father_num;j++){
+					if((it->fathers.at(j))->components == x_minus_e){
+						x_minus_e_pi_length = ((it->fathers.at(j))->pi_set).size();
+						if(x_pi_length == x_minus_e_pi_length){
+							getAttr(x_minus_e,e);
+							it->RHS = it->RHS - e;
+							it->RHS = it-> RHS & X;
+						}
+						break;
+					}
+				}
+			}
+			e_tag = e_tag << 1;
+		}
+		if(it->RHS == 0){
+			level_set[n].erase(it);
+		}
+	}
 }
 
 void FunctionalDependence::run() {
 	for (int i = 1; i < dims; i++) {
 		generate_next_level(i);
 		compute_dependencies(i);
+	}
+	outputResult();
+}
+
+void FunctionalDependence::getAttr(int A, int  B){
+	struct fd fd_temp;
+	int i, e_tag = 1;
+	for(i=1;i<=dims;i++){
+		if(A & e_tag != 0){
+			fd_temp.LHS.push_back(i);
+		}
+		e_tag = e_tag << 1;
+	}
+	e_tag = 1;
+	for(i=1;i<=dims;i++){
+		if(B & e_tag != 0){
+			fd_temp.attr = i;
+			break;
+		}
+		e_tag = e_tag << 1;
+	}
+	fd_set.push_back(fd_temp);
+}
+
+void FunctionalDependence::outputResult(){
+	ofstream fout("output.txt");
+	int len, i;
+	vector<fd>::iterator it;
+	for(it=fd_set.begin();it!=fd_set.end();it++){
+		len = it->LHS.size();
+		for(i=0;i<len-1;i++){
+			fout<<it->LHS.at(i)<<",";
+		}
+		fout<<it->LHS.at(i)<<"->";
+		fout<<it->attr<<endl;
 	}
 }

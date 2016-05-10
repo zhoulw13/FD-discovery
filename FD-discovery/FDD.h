@@ -12,9 +12,15 @@ struct neuron {
 	vector<neuron*> sons;
 };
 
+struct fd{
+	vector<int> LHS;
+	int attr;
+}
+
 class FunctionalDependence {
 	int dims, size;
 	vector<vector<neuron>> level_set;
+	vector<fd> fd_set;
 
 public:
 	FunctionalDependence(int, int);
@@ -22,4 +28,6 @@ public:
 	void generate_next_level(int n);
 	void compute_dependencies(int n);
 	void run();
+	void getAttr(int A, int B);
+	void outputResult();
 };
