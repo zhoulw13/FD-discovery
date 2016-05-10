@@ -15,7 +15,7 @@ struct neuron {
 struct fd{
 	vector<int> LHS;
 	int attr;
-}
+};
 
 class FunctionalDependence {
 	int dims, size;

@@ -1,5 +1,8 @@
 #include "FDD.h"
 #include <algorithm>
+#include <string.h>
+#include <math.h>
+#include <fstream>
 #include <map>
 
 FunctionalDependence::FunctionalDependence(int n, int s):dims(n), size(s) {
@@ -108,12 +111,12 @@ void FunctionalDependence::compute_dependencies(int n) {
 		int e_set = X & it->RHS;
 		int e_tag = 1;
 		x_pi_length = it->pi_set.size(); 
-		for(i=0;i<dims;i++){
+		for(int i=0;i<dims;i++){
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
 				int father_num = (it->fathers).size();
-				for(j=0;j<father_num;j++){
+				for(int j=0;j<father_num;j++){
 					if((it->fathers.at(j))->components == x_minus_e){
 						x_minus_e_pi_length = ((it->fathers.at(j))->pi_set).size();
 						if(x_pi_length == x_minus_e_pi_length){

@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 	readfile(argv[1], data, dims, size);
 	FunctionalDependence fdd(dims, size);
 	fdd.init(data);
-	//fdd.run();
+	fdd.run();
 	release(data);
 
 	clock_t end = clock();
