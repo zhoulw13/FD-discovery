@@ -22,6 +22,7 @@ class FunctionalDependence {
 	int dims, size;
 	vector<vector<neuron> > level_set;
 	vector<fd> fd_set;
+	vector<int> delete_set;
 
 public:
 	FunctionalDependence(int, int);

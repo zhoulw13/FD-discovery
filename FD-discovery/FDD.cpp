@@ -47,64 +47,68 @@ void FunctionalDependence::init(string **data) {
 
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
+	vector<int> flag;
+	vector<int>::iterator it;
+
 	const int maxNum = 1 << dims - 1;
-	set<int> flag;
-	set<int>::iterator setIt;
 	int *TArray = new int [size];
 	vector<int> *SArray = new vector<int> [size];
 	memset(TArray, -1, sizeof(int) * size);
-	for (int i = 0; i < level_set[n].size() - 1; i++) {
-		for (int j = i + 1; j < level_set[n].size(); j++) {
-			int newComponents = level_set[n][i].components | level_set[n][j].components;
+	
+	int level_size = level_set[n].size();
+	for (int i = 0; i < level_size - 1; i++) {
+		for (int j = i + 1; j < level_size; j++) {
+			neuron *ni, *nj;
+			ni = &level_set[n][i];
+			nj = &level_set[n][j];
+			int newComponents = ni->components | nj->components;
 			int count = newComponents & 1, temp = newComponents;
-			for (int k = 0; k < 12; k++) {
+			for (int k = 0; k < dims; k++) {
 				temp >>= 1;
 				count += temp & 1;
 			}
+			//check validation
 			if (count != n + 2)
 				continue;
-			//cout << bitset<32>(newComponents) << endl;
-			setIt = flag.find(newComponents);
-			if (setIt == flag.end()) {
-				flag.insert(newComponents);
+
+			it = find(flag.begin(), flag.end(), newComponents);
+			if (it == flag.end()) {
+				flag.push_back(newComponents);
 				neuron ns;
 				// compute components
+
 				ns.components = newComponents;
-				level_set[n][i].sons.insert(&ns);
-				level_set[n][j].sons.insert(&ns);
-				ns.fathers.insert(&(level_set[n][i]));
-				ns.fathers.insert(&(level_set[n][j]));
+				ni->sons.insert(&ns);
+				nj->sons.insert(&ns);
+				ns.fathers.insert(ni);
+				ns.fathers.insert(nj);
 				// compute pi_set
-				for (int l = 0; l < level_set[n][i].pi_set.size(); l++) {
-					for (int m = 0; m < level_set[n][i].pi_set[l].size(); m++){
-						TArray[level_set[n][i].pi_set[l][m] - 1] = l;
+				for (int l = 0; l < ni->pi_set.size(); l++) {
+					for (int m = 0; m < ni->pi_set[l].size(); m++){
+						TArray[ni->pi_set[l][m] - 1] = l;
 					}
 				}
-				for (int l = 0; l < level_set[n][j].pi_set.size(); l++) {
-					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].push_back(level_set[n][j].pi_set[l][m]);
+				for (int l = 0; l < nj->pi_set.size(); l++) {
+					for (int m = 0; m < nj->pi_set[l].size(); m++) {
+						SArray[TArray[nj->pi_set[l][m] - 1]].push_back(nj->pi_set[l][m]);
 					}
-					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 0) {
-							ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m] - 1]]);
-							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].clear();
+					for (int m = 0; m < nj->pi_set[l].size(); m++) {
+						if (SArray[TArray[nj->pi_set[l][m] - 1]].size() > 0) {
+							ns.pi_set.push_back(SArray[TArray[nj->pi_set[l][m] - 1]]);
+							SArray[TArray[nj->pi_set[l][m] - 1]].clear();
 						}
 					}
 				}
 				// compute RHS+
-				ns.RHS = level_set[n][i].RHS & level_set[n][j].RHS;
+				ns.RHS = ni->RHS & nj->RHS;
 				L.push_back(ns);
 			} else {
-				for (int l = 0; l < L.size(); l++) {
-					if (L[l].components == newComponents) {
-						level_set[n][i].sons.insert(&L[l]);
-						level_set[n][j].sons.insert(&L[l]);
-						L[l].fathers.insert(&(level_set[n][i]));
-						L[l].fathers.insert(&(level_set[n][j]));
-						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
-						break;
-					}
-				}
+				int l = it - flag.begin();
+				ni->sons.insert(&L[l]);
+				nj->sons.insert(&L[l]);
+				L[l].fathers.insert(ni);
+				L[l].fathers.insert(nj);
+				L[l].RHS = ni->RHS & nj->RHS & L[l].RHS;
 			}		
 			memset(TArray, -1, sizeof(int) * size);
 		}
@@ -117,24 +121,26 @@ void FunctionalDependence::generate_next_level(int n) {
 }
 
 void FunctionalDependence::compute_dependencies(int n) {
-	vector<neuron>::iterator it;
-	int x_pi_length, x_minus_e_pi_length, e;
+	vector<neuron>::iterator it, temp_it;
+	set<neuron*>::iterator father_it;
+	int valid_tmp = (1 << dims) - 1; 
+	int x_pi_length, x_minus_e_pi_length, e, father_num;
 	for(it=level_set[n].begin();it!=level_set[n].end();it++){
 		int X = it->components;
 		int e_set = X & it->RHS;
 		int e_tag = 1;
-		x_pi_length = it->pi_set.size(); 
+		x_pi_length = it->pi_set.size();
+		father_num = (it->fathers).size();
 		for(int i=0;i<dims;i++){
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
-				set<neuron*>::iterator fit = it->fathers.begin();
-				for(; fit != it->fathers.end(); fit++){
-					if ((*fit)->components == x_minus_e){
-						x_minus_e_pi_length = ((*fit)->pi_set).size();
+				for(father_it = (it->fathers).begin();father_it != (it->fathers).end();father_it++){
+					if((*father_it)->components == x_minus_e){
+						x_minus_e_pi_length = ((*father_it)->pi_set).size();
 						if(x_pi_length == x_minus_e_pi_length){
 							getAttr(x_minus_e,e);
-							it->RHS = it->RHS - e;
+							it->RHS = it->RHS & (~e);
 							it->RHS = it-> RHS & X;
 						}
 						break;
@@ -143,17 +149,31 @@ void FunctionalDependence::compute_dependencies(int n) {
 			}
 			e_tag = e_tag << 1;
 		}
-		if(it->RHS == 0){
-			it = level_set[n].erase(it);
-		}
 	}
 }
+
+bool SortByM1( const fd &v1, const fd &v2)
+{  
+	int len1 = v1.LHS.size(), len2 = v2.LHS.size();
+	for(int i=0;i<len1 && i<len2;i++){
+		if(v1.LHS.at(i) < v2.LHS.at(i))
+			return true;
+		else if(v1.LHS.at(i) > v2.LHS.at(i))
+			return false;
+		if(i == len1 - 1 && i < len2 - 1)
+			return true;
+		else if(i == len2 - 1 && i < len1 - 1)
+			return false;
+	}
+	return (v1.attr < v2.attr);
+}  
 
 void FunctionalDependence::run() {
 	for (int i = 1; i < dims; i++) {
 		generate_next_level(i-1);
 		compute_dependencies(i);
 	}
+	sort(fd_set.begin(),fd_set.end(),SortByM1);  
 	outputResult();
 }
 
@@ -184,9 +204,9 @@ void FunctionalDependence::outputResult(){
 	for(it=fd_set.begin();it!=fd_set.end();it++){
 		len = it->LHS.size();
 		for(i=0;i<len-1;i++){
-			fout<<it->LHS.at(i)<<",";
+			fout<<it->LHS.at(i)<<" ";
 		}
-		fout<<it->LHS.at(i)<<"->";
+		fout<<it->LHS.at(i)<<" -> ";
 		fout<<it->attr<<endl;
 	}
 }
