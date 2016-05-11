@@ -4,6 +4,10 @@
 #include <string.h>
 #include <math.h>
 #include <fstream>
+<<<<<<< HEAD
+=======
+#include <set>
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 #include <map>
 #include <bitset>
 
@@ -47,7 +51,10 @@ void FunctionalDependence::init(string **data) {
 
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
+<<<<<<< HEAD
 	vector<int>::iterator delete_it;
+=======
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 	const int maxNum = 1 << dims - 1;
 	set<int> flag;
 	set<int>::iterator setIt;
@@ -59,6 +66,7 @@ void FunctionalDependence::generate_next_level(int n) {
 		for (int j = i + 1; j < level_set[n].size(); j++) {
 			int newComponents = level_set[n][i].components | level_set[n][j].components;
 			int count = newComponents & 1, temp = newComponents;
+<<<<<<< HEAD
 			for (int k = 0; k < dims; k++) {
 				temp >>= 1;
 				count += temp & 1;
@@ -76,6 +84,14 @@ void FunctionalDependence::generate_next_level(int n) {
 				continue;
 			}
 			*/
+=======
+			for (int k = 0; k < 12; k++) {
+				temp >>= 1;
+				count += temp & 1;
+			}
+			if (count != n + 2)
+				continue;
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 			//cout << bitset<32>(newComponents) << endl;
 			setIt = flag.find(newComponents);
 			if (setIt == flag.end()) {
@@ -110,11 +126,19 @@ void FunctionalDependence::generate_next_level(int n) {
 			} else {
 				for (int l = 0; l < L.size(); l++) {
 					if (L[l].components == newComponents) {
+<<<<<<< HEAD
 						level_set[n][i].sons.insert(&L[l]);
 						level_set[n][j].sons.insert(&L[l]);
 						L[l].fathers.insert(&(level_set[n][i]));
 						L[l].fathers.insert(&(level_set[n][j]));
 						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS & L[l].RHS;
+=======
+						level_set[n][i].sons.push_back(&L[l]);
+						level_set[n][j].sons.push_back(&L[l]);
+						L[l].fathers.push_back(&(level_set[n][i]));
+						L[l].fathers.push_back(&(level_set[n][j]));
+						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 						break;
 					}
 				}
@@ -138,15 +162,26 @@ void FunctionalDependence::compute_dependencies(int n) {
 		int X = it->components;
 		int e_set = X & it->RHS;
 		int e_tag = 1;
+<<<<<<< HEAD
 		x_pi_length = it->pi_set.size();
 		father_num = (it->fathers).size();
+=======
+		x_pi_length = it->pi_set.size(); 
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 		for(int i=0;i<dims;i++){
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
+<<<<<<< HEAD
 				for(father_it = (it->fathers).begin();father_it != (it->fathers).end();father_it++){
 					if((*father_it)->components == x_minus_e){
 						x_minus_e_pi_length = ((*father_it)->pi_set).size();
+=======
+				int father_num = (it->fathers).size();
+				for(int j=0;j<father_num;j++){
+					if((it->fathers.at(j))->components == x_minus_e){
+						x_minus_e_pi_length = ((it->fathers.at(j))->pi_set).size();
+>>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 						if(x_pi_length == x_minus_e_pi_length){
 							getAttr(x_minus_e,e);
 							it->RHS = it->RHS & (~e);
