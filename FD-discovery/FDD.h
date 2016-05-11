@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <set>
 using namespace std;
 
 struct neuron {
@@ -8,8 +9,8 @@ struct neuron {
 
 	vector<vector<int> > pi_set;
 
-	vector<neuron*> fathers;
-	vector<neuron*> sons;
+	set<neuron*> fathers;
+	set<neuron*> sons;
 };
 
 struct fd{

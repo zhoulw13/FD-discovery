@@ -1,9 +1,11 @@
 #include "FDD.h"
 #include <algorithm>
+#include <string>
 #include <string.h>
 #include <math.h>
 #include <fstream>
 #include <map>
+#include <bitset>
 
 FunctionalDependence::FunctionalDependence(int n, int s):dims(n), size(s) {
 }
@@ -13,7 +15,7 @@ void FunctionalDependence::init(string **data) {
 	for (int i = 0; i < dims; i++) {
 		neuron ni;
 		ni.components = 1 << i;
-		ni.RHS = ~ni.components;
+		ni.RHS = (1 << dims) - 1;
 		L1.push_back(ni);
 	}
 
@@ -46,36 +48,46 @@ void FunctionalDependence::init(string **data) {
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
 	const int maxNum = 1 << dims - 1;
-	char *flag = new char [maxNum];
-	int *TArray = new int [size]; 
+	set<int> flag;
+	set<int>::iterator setIt;
+	int *TArray = new int [size];
 	vector<int> *SArray = new vector<int> [size];
-	memset(flag, 0, sizeof(char) * maxNum);
 	memset(TArray, -1, sizeof(int) * size);
 	for (int i = 0; i < level_set[n].size() - 1; i++) {
 		for (int j = i + 1; j < level_set[n].size(); j++) {
-			int newComponents = level_set[n][i].components & level_set[n][j].components;
-			if (flag[newComponents] == 0) {
-				flag[newComponents] = 1;
+			int newComponents = level_set[n][i].components | level_set[n][j].components;
+			int count = newComponents & 1, temp = newComponents;
+			for (int k = 0; k < 12; k++) {
+				temp >>= 1;
+				count += temp & 1;
+			}
+			if (count != n + 2)
+				continue;
+			//cout << bitset<32>(newComponents) << endl;
+			setIt = flag.find(newComponents);
+			if (setIt == flag.end()) {
+				flag.insert(newComponents);
 				neuron ns;
 				// compute components
 				ns.components = newComponents;
-				level_set[n][i].sons.push_back(&ns);
-				level_set[n][j].sons.push_back(&ns);
-				ns.fathers.push_back(&(level_set[n][i]));
-				ns.fathers.push_back(&(level_set[n][j]));
+				level_set[n][i].sons.insert(&ns);
+				level_set[n][j].sons.insert(&ns);
+				ns.fathers.insert(&(level_set[n][i]));
+				ns.fathers.insert(&(level_set[n][j]));
 				// compute pi_set
 				for (int l = 0; l < level_set[n][i].pi_set.size(); l++) {
 					for (int m = 0; m < level_set[n][i].pi_set[l].size(); m++){
-						TArray[level_set[n][i].pi_set[l][m]] = l;
+						TArray[level_set[n][i].pi_set[l][m] - 1] = l;
 					}
 				}
 				for (int l = 0; l < level_set[n][j].pi_set.size(); l++) {
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						SArray[TArray[level_set[n][j].pi_set[l][m]]].push_back(level_set[n][j].pi_set[l][m]);
+						SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].push_back(level_set[n][j].pi_set[l][m]);
 					}
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (SArray[TArray[level_set[n][j].pi_set[l][m]]].size() > 0) {
-							ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m]]]);
+						if (SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 0) {
+							ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m] - 1]]);
+							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].clear();
 						}
 					}
 				}
@@ -83,24 +95,24 @@ void FunctionalDependence::generate_next_level(int n) {
 				ns.RHS = level_set[n][i].RHS & level_set[n][j].RHS;
 				L.push_back(ns);
 			} else {
-				for (int l = 0; l < level_set[n + 1].size(); l++) {
-					if (level_set[n + 1][l].components == newComponents) {
-						level_set[n][i].sons.push_back(&L[l]);
-						level_set[n][j].sons.push_back(&L[l]);
-						L[l].fathers.push_back(&(level_set[n][i]));
-						L[l].fathers.push_back(&(level_set[n][j]));
+				for (int l = 0; l < L.size(); l++) {
+					if (L[l].components == newComponents) {
+						level_set[n][i].sons.insert(&L[l]);
+						level_set[n][j].sons.insert(&L[l]);
+						L[l].fathers.insert(&(level_set[n][i]));
+						L[l].fathers.insert(&(level_set[n][j]));
 						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
 						break;
 					}
 				}
-			}			
+			}		
+			memset(TArray, -1, sizeof(int) * size);
 		}
 	}
 	level_set.push_back(L);
 
-	delete []flag;
-	delete []TArray;
-	delete []SArray;
+	delete[] TArray;
+	delete[] SArray;
 	return;
 }
 
@@ -116,10 +128,10 @@ void FunctionalDependence::compute_dependencies(int n) {
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
-				int father_num = (it->fathers).size();
-				for(int j=0;j<father_num;j++){
-					if((it->fathers.at(j))->components == x_minus_e){
-						x_minus_e_pi_length = ((it->fathers.at(j))->pi_set).size();
+				set<neuron*>::iterator fit = it->fathers.begin();
+				for(; fit != it->fathers.end(); fit++){
+					if ((*fit)->components == x_minus_e){
+						x_minus_e_pi_length = ((*fit)->pi_set).size();
 						if(x_pi_length == x_minus_e_pi_length){
 							getAttr(x_minus_e,e);
 							it->RHS = it->RHS - e;
@@ -132,7 +144,7 @@ void FunctionalDependence::compute_dependencies(int n) {
 			e_tag = e_tag << 1;
 		}
 		if(it->RHS == 0){
-			level_set[n].erase(it);
+			it = level_set[n].erase(it);
 		}
 	}
 }
@@ -149,14 +161,14 @@ void FunctionalDependence::getAttr(int A, int  B){
 	struct fd fd_temp;
 	int i, e_tag = 1;
 	for(i=1;i<=dims;i++){
-		if(A & e_tag != 0){
+		if((A & e_tag) != 0){
 			fd_temp.LHS.push_back(i);
 		}
 		e_tag = e_tag << 1;
 	}
 	e_tag = 1;
 	for(i=1;i<=dims;i++){
-		if(B & e_tag != 0){
+		if((B & e_tag) != 0){
 			fd_temp.attr = i;
 			break;
 		}
