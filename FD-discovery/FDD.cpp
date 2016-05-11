@@ -85,8 +85,8 @@ void FunctionalDependence::generate_next_level(int n) {
 			} else {
 				for (int l = 0; l < level_set[n + 1].size(); l++) {
 					if (level_set[n + 1][l].components == newComponents) {
-						level_set[n][i].sons.push_back(&level_set[n + 1][l]);
-						level_set[n][j].sons.push_back(&level_set[n + 1][l]);
+						level_set[n][i].sons.push_back(&L[l]);
+						level_set[n][j].sons.push_back(&L[l]);
 						L[l].fathers.push_back(&(level_set[n][i]));
 						L[l].fathers.push_back(&(level_set[n][j]));
 						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
