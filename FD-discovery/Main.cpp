@@ -6,7 +6,7 @@ using namespace std;
 #include "FDD.h"
 
 const int dims = 12;
-const int size = 100;
+const int size = 14970;
 
 
 string **init() {

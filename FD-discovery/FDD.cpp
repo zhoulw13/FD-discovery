@@ -134,38 +134,7 @@ void FunctionalDependence::compute_dependencies(int n) {
 	int valid_tmp = (1 << dims) - 1; 
 	int x_pi_length, x_minus_e_pi_length, e, father_num;
 	int x_pi_sizeSum = 0, x_minus_e_pi_sizeSum = 0;
-	/*for(it=level_set[n].begin();it!=level_set[n].end();it++){
-		int X = it->components;
-		int e_set = X & it->RHS;
-		int e_tag = 1;
-		x_pi_length = it->pi_set.size();
-		father_num = (it->fathers).size();
-		for(int i=0;i<dims;i++){
-			e = e_set & e_tag;
-			if(e != 0){
-				int x_minus_e = X - e;
-				for(father_it = (it->fathers).begin();father_it != (it->fathers).end();father_it++){
-					if((*father_it)->components == x_minus_e){
-						x_minus_e_pi_length = ((*father_it)->pi_set).size();
-						if(x_pi_length == x_minus_e_pi_length){
-							getAttr(x_minus_e,e);
-							it->RHS = it->RHS & (~e);
-							it->RHS = it-> RHS & X;
-						}
-						break;
-					}
-				}
-			}
-			e_tag = e_tag << 1;
-		}
-		/ *if(it->RHS == 0){
-			delete_set.push_back(it->components);
-			temp_it = it;
-			temp_it--;
-			level_set[n].erase(it);
-			it = temp_it;
-		}* /
-	}*/
+
 	for(int i = 0; i < level_set[n].size(); i++){
 		int X = level_set[n][i].components;
 		int e_set = X & level_set[n][i].RHS;
