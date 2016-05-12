@@ -4,10 +4,6 @@
 #include <string.h>
 #include <math.h>
 #include <fstream>
-<<<<<<< HEAD
-=======
-#include <set>
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 #include <map>
 #include <bitset>
 
@@ -43,6 +39,15 @@ void FunctionalDependence::init(string **data) {
 		}
 	}
 
+	for (vector<neuron>::iterator it = L1.begin(); it != L1.end(); it++) {
+		if (it->pi_set.size() == 1) {
+			vector<neuron>::iterator it_temp = it;
+			it_temp--;
+			L1.erase(it);
+			it = it_temp;
+		}
+	}
+		
 	level_set.push_back(L1);
 
 	delete []index;
@@ -51,11 +56,6 @@ void FunctionalDependence::init(string **data) {
 
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
-<<<<<<< HEAD
-	vector<int>::iterator delete_it;
-=======
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
-	const int maxNum = 1 << dims - 1;
 	set<int> flag;
 	set<int>::iterator setIt;
 	int *TArray = new int [size];
@@ -66,7 +66,6 @@ void FunctionalDependence::generate_next_level(int n) {
 		for (int j = i + 1; j < level_set[n].size(); j++) {
 			int newComponents = level_set[n][i].components | level_set[n][j].components;
 			int count = newComponents & 1, temp = newComponents;
-<<<<<<< HEAD
 			for (int k = 0; k < dims; k++) {
 				temp >>= 1;
 				count += temp & 1;
@@ -74,24 +73,6 @@ void FunctionalDependence::generate_next_level(int n) {
 			//check validation
 			if (count != n + 2)
 				continue;
-
-			/*for (delete_it = delete_set.begin(); delete_it != delete_set.end(); delete_it++) {
-				if (((*delete_it) & newComponents) == (*delete_it)) {
-					break;
-				}
-			}
-			if (delete_it != delete_set.end()) {
-				continue;
-			}
-			*/
-=======
-			for (int k = 0; k < 12; k++) {
-				temp >>= 1;
-				count += temp & 1;
-			}
-			if (count != n + 2)
-				continue;
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 			//cout << bitset<32>(newComponents) << endl;
 			setIt = flag.find(newComponents);
 			if (setIt == flag.end()) {
@@ -111,11 +92,13 @@ void FunctionalDependence::generate_next_level(int n) {
 				}
 				for (int l = 0; l < level_set[n][j].pi_set.size(); l++) {
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].push_back(level_set[n][j].pi_set[l][m]);
+						if (TArray[level_set[n][j].pi_set[l][m] - 1] != -1)
+							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].push_back(level_set[n][j].pi_set[l][m]);
 					}
 					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 0) {
-							ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m] - 1]]);
+						if (TArray[level_set[n][j].pi_set[l][m] - 1] != -1 && SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 0) {
+							if (SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 1)
+								ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m] - 1]]);
 							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].clear();
 						}
 					}
@@ -126,23 +109,15 @@ void FunctionalDependence::generate_next_level(int n) {
 			} else {
 				for (int l = 0; l < L.size(); l++) {
 					if (L[l].components == newComponents) {
-<<<<<<< HEAD
 						level_set[n][i].sons.insert(&L[l]);
 						level_set[n][j].sons.insert(&L[l]);
 						L[l].fathers.insert(&(level_set[n][i]));
 						L[l].fathers.insert(&(level_set[n][j]));
-						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS & L[l].RHS;
-=======
-						level_set[n][i].sons.push_back(&L[l]);
-						level_set[n][j].sons.push_back(&L[l]);
-						L[l].fathers.push_back(&(level_set[n][i]));
-						L[l].fathers.push_back(&(level_set[n][j]));
-						L[l].RHS = level_set[n][i].RHS & level_set[n][j].RHS;
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
+						L[l].RHS &= level_set[n][i].RHS & level_set[n][j].RHS;
 						break;
 					}
 				}
-			}		
+			}
 			memset(TArray, -1, sizeof(int) * size);
 		}
 	}
@@ -158,34 +133,64 @@ void FunctionalDependence::compute_dependencies(int n) {
 	set<neuron*>::iterator father_it;
 	int valid_tmp = (1 << dims) - 1; 
 	int x_pi_length, x_minus_e_pi_length, e, father_num;
-	for(it=level_set[n].begin();it!=level_set[n].end();it++){
+	int x_pi_sizeSum = 0, x_minus_e_pi_sizeSum = 0;
+	/*for(it=level_set[n].begin();it!=level_set[n].end();it++){
 		int X = it->components;
 		int e_set = X & it->RHS;
 		int e_tag = 1;
-<<<<<<< HEAD
 		x_pi_length = it->pi_set.size();
 		father_num = (it->fathers).size();
-=======
-		x_pi_length = it->pi_set.size(); 
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 		for(int i=0;i<dims;i++){
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
-<<<<<<< HEAD
 				for(father_it = (it->fathers).begin();father_it != (it->fathers).end();father_it++){
 					if((*father_it)->components == x_minus_e){
 						x_minus_e_pi_length = ((*father_it)->pi_set).size();
-=======
-				int father_num = (it->fathers).size();
-				for(int j=0;j<father_num;j++){
-					if((it->fathers.at(j))->components == x_minus_e){
-						x_minus_e_pi_length = ((it->fathers.at(j))->pi_set).size();
->>>>>>> 6a2164da0ed4b7707b0410b6d5d8179d2655ec8a
 						if(x_pi_length == x_minus_e_pi_length){
 							getAttr(x_minus_e,e);
 							it->RHS = it->RHS & (~e);
 							it->RHS = it-> RHS & X;
+						}
+						break;
+					}
+				}
+			}
+			e_tag = e_tag << 1;
+		}
+		/ *if(it->RHS == 0){
+			delete_set.push_back(it->components);
+			temp_it = it;
+			temp_it--;
+			level_set[n].erase(it);
+			it = temp_it;
+		}* /
+	}*/
+	for(int i = 0; i < level_set[n].size(); i++){
+		int X = level_set[n][i].components;
+		int e_set = X & level_set[n][i].RHS;
+		int e_tag = 1;
+		x_pi_length = level_set[n][i].pi_set.size();
+		x_pi_sizeSum = 0;
+		for (int k = 0; k < x_pi_length; k++) {
+			x_pi_sizeSum += level_set[n][i].pi_set[k].size();
+		}
+		father_num = (level_set[n][i].fathers).size();
+		for(int j = 0; j < dims; j++){
+			e = e_set & e_tag;
+			if(e != 0){
+				int x_minus_e = X - e;
+				for(father_it = (level_set[n][i].fathers).begin(); father_it != (level_set[n][i].fathers).end(); father_it++){
+					if((*father_it)->components == x_minus_e){
+						x_minus_e_pi_length = ((*father_it)->pi_set).size();
+						x_minus_e_pi_sizeSum = 0;
+						for (int k = 0; k < x_minus_e_pi_length; k++) {
+							x_minus_e_pi_sizeSum += ((*father_it)->pi_set)[k].size();
+						}
+						if(x_pi_sizeSum - x_pi_length == x_minus_e_pi_sizeSum - x_minus_e_pi_length){
+							getAttr(x_minus_e,e);
+							level_set[n][i].RHS &= (~e);
+							level_set[n][i].RHS &= X;
 						}
 						break;
 					}
