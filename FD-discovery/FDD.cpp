@@ -56,15 +56,19 @@ void FunctionalDependence::init(string **data) {
 
 void FunctionalDependence::generate_next_level(int n) {
 	vector<neuron> L;
-	set<int> flag;
-	set<int>::iterator setIt;
+	vector<int> flag;
+	vector<int>::iterator it;
 	int *TArray = new int [size];
 	vector<int> *SArray = new vector<int> [size];
 	memset(TArray, -1, sizeof(int) * size);
-	//cout<<delete_set.size()<<endl;
-	for (int i = 0; i < level_set[n].size() - 1; i++) {
-		for (int j = i + 1; j < level_set[n].size(); j++) {
-			int newComponents = level_set[n][i].components | level_set[n][j].components;
+	
+	int level_size = level_set[n].size();
+	for (int i = 0; i < level_size - 1; i++) {
+		for (int j = i + 1; j < level_size; j++) {
+			neuron *ni, *nj;
+			ni = &level_set[n][i];
+			nj = &level_set[n][j];
+			int newComponents = ni->components | nj->components;
 			int count = newComponents & 1, temp = newComponents;
 			for (int k = 0; k < dims; k++) {
 				temp >>= 1;
@@ -73,50 +77,46 @@ void FunctionalDependence::generate_next_level(int n) {
 			//check validation
 			if (count != n + 2)
 				continue;
-			//cout << bitset<32>(newComponents) << endl;
-			setIt = flag.find(newComponents);
-			if (setIt == flag.end()) {
-				flag.insert(newComponents);
+			it = find(flag.begin(), flag.end(), newComponents);
+			if (it == flag.end()) {
+				flag.push_back(newComponents);
 				neuron ns;
 				// compute components
+
 				ns.components = newComponents;
-				level_set[n][i].sons.insert(&ns);
-				level_set[n][j].sons.insert(&ns);
-				ns.fathers.insert(&(level_set[n][i]));
-				ns.fathers.insert(&(level_set[n][j]));
+				ni->sons.insert(&ns);
+				nj->sons.insert(&ns);
+				ns.fathers.insert(ni);
+				ns.fathers.insert(nj);
 				// compute pi_set
-				for (int l = 0; l < level_set[n][i].pi_set.size(); l++) {
-					for (int m = 0; m < level_set[n][i].pi_set[l].size(); m++){
-						TArray[level_set[n][i].pi_set[l][m] - 1] = l;
+				for (int l = 0; l < ni->pi_set.size(); l++) {
+					for (int m = 0; m < ni->pi_set[l].size(); m++){
+						TArray[ni->pi_set[l][m] - 1] = l;
 					}
 				}
-				for (int l = 0; l < level_set[n][j].pi_set.size(); l++) {
-					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (TArray[level_set[n][j].pi_set[l][m] - 1] != -1)
-							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].push_back(level_set[n][j].pi_set[l][m]);
+				for (int l = 0; l < nj->pi_set.size(); l++) {
+					for (int m = 0; m < nj->pi_set[l].size(); m++) {
+						if (TArray[nj->pi_set[l][m] - 1] != -1)
+							SArray[TArray[nj->pi_set[l][m] - 1]].push_back(nj->pi_set[l][m]);
 					}
-					for (int m = 0; m < level_set[n][j].pi_set[l].size(); m++) {
-						if (TArray[level_set[n][j].pi_set[l][m] - 1] != -1 && SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 0) {
-							if (SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].size() > 1)
-								ns.pi_set.push_back(SArray[TArray[level_set[n][j].pi_set[l][m] - 1]]);
-							SArray[TArray[level_set[n][j].pi_set[l][m] - 1]].clear();
+					for (int m = 0; m < nj->pi_set[l].size(); m++) {
+						if (TArray[nj->pi_set[l][m] - 1] != -1 && SArray[TArray[nj->pi_set[l][m] - 1]].size() > 0) {
+							if (SArray[TArray[nj->pi_set[l][m] - 1]].size() > 1)
+								ns.pi_set.push_back(SArray[TArray[nj->pi_set[l][m] - 1]]);
+							SArray[TArray[nj->pi_set[l][m] - 1]].clear();
 						}
 					}
 				}
 				// compute RHS+
-				ns.RHS = level_set[n][i].RHS & level_set[n][j].RHS;
+				ns.RHS = ni->RHS & nj->RHS;
 				L.push_back(ns);
 			} else {
-				for (int l = 0; l < L.size(); l++) {
-					if (L[l].components == newComponents) {
-						level_set[n][i].sons.insert(&L[l]);
-						level_set[n][j].sons.insert(&L[l]);
-						L[l].fathers.insert(&(level_set[n][i]));
-						L[l].fathers.insert(&(level_set[n][j]));
-						L[l].RHS &= level_set[n][i].RHS & level_set[n][j].RHS;
-						break;
-					}
-				}
+				int l = it - flag.begin();
+				ni->sons.insert(&L[l]);
+				nj->sons.insert(&L[l]);
+				L[l].fathers.insert(ni);
+				L[l].fathers.insert(nj);
+				L[l].RHS = ni->RHS & nj->RHS & L[l].RHS;
 			}
 			memset(TArray, -1, sizeof(int) * size);
 		}

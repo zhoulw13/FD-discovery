@@ -4,3 +4,6 @@ Debug
 FD-discovery/Debug
 Release
 FD-discovery/Release
+FD-discovery/output.txt
+FD-discovery/test_data.txt
+FD-discovery/test_output.txt
