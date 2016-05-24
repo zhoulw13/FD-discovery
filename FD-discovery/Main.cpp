@@ -5,8 +5,8 @@ using namespace std;
 #include "Readfile.h"
 #include "FDD.h"
 
-const int dims = 12;
-const int size = 14970;
+const int dims = 15;
+const int size = 99918;
 
 
 string **init() {
@@ -36,8 +36,8 @@ int main(int argc, char** argv) {
 	readfile(argv[1], data, dims, size);
 	FunctionalDependence fdd(dims, size);
 	fdd.init(data);
-	fdd.run();
 	release(data);
+	fdd.run();
 
 	clock_t end = clock();
 	double time = (double)(end - start) / CLOCKS_PER_SEC;

@@ -20,7 +20,8 @@ struct fd{
 
 class FunctionalDependence {
 	int dims, size;
-	vector<vector<neuron> > level_set;
+	vector<neuron> curr_level;
+	vector<neuron> next_level;
 	vector<fd> fd_set;
 	vector<int> delete_set;
 

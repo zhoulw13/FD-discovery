@@ -48,7 +48,8 @@ void FunctionalDependence::init(string **data) {
 		}
 	}
 		
-	level_set.push_back(L1);
+	//level_set.push_back(L1);
+	curr_level = L1;
 
 	delete []index;
 	return;
@@ -62,12 +63,12 @@ void FunctionalDependence::generate_next_level(int n) {
 	vector<int> *SArray = new vector<int> [size];
 	memset(TArray, -1, sizeof(int) * size);
 	
-	int level_size = level_set[n].size();
+	int level_size = curr_level.size();
 	for (int i = 0; i < level_size - 1; i++) {
 		for (int j = i + 1; j < level_size; j++) {
 			neuron *ni, *nj;
-			ni = &level_set[n][i];
-			nj = &level_set[n][j];
+			ni = &curr_level[i];
+			nj = &curr_level[j];
 			int newComponents = ni->components | nj->components;
 			int count = newComponents & 1, temp = newComponents;
 			for (int k = 0; k < dims; k++) {
@@ -121,7 +122,8 @@ void FunctionalDependence::generate_next_level(int n) {
 			memset(TArray, -1, sizeof(int) * size);
 		}
 	}
-	level_set.push_back(L);
+	//level_set.push_back(L);
+	next_level = L;
 
 	delete[] TArray;
 	delete[] SArray;
@@ -135,21 +137,21 @@ void FunctionalDependence::compute_dependencies(int n) {
 	int x_pi_length, x_minus_e_pi_length, e, father_num;
 	int x_pi_sizeSum = 0, x_minus_e_pi_sizeSum = 0;
 
-	for(int i = 0; i < level_set[n].size(); i++){
-		int X = level_set[n][i].components;
-		int e_set = X & level_set[n][i].RHS;
+	for(int i = 0; i < next_level.size(); i++){
+		int X = next_level[i].components;
+		int e_set = X & next_level[i].RHS;
 		int e_tag = 1;
-		x_pi_length = level_set[n][i].pi_set.size();
+		x_pi_length = next_level[i].pi_set.size();
 		x_pi_sizeSum = 0;
 		for (int k = 0; k < x_pi_length; k++) {
-			x_pi_sizeSum += level_set[n][i].pi_set[k].size();
+			x_pi_sizeSum += next_level[i].pi_set[k].size();
 		}
-		father_num = (level_set[n][i].fathers).size();
+		father_num = (next_level[i].fathers).size();
 		for(int j = 0; j < dims; j++){
 			e = e_set & e_tag;
 			if(e != 0){
 				int x_minus_e = X - e;
-				for(father_it = (level_set[n][i].fathers).begin(); father_it != (level_set[n][i].fathers).end(); father_it++){
+				for(father_it = (next_level[i].fathers).begin(); father_it != (next_level[i].fathers).end(); father_it++){
 					if((*father_it)->components == x_minus_e){
 						x_minus_e_pi_length = ((*father_it)->pi_set).size();
 						x_minus_e_pi_sizeSum = 0;
@@ -158,8 +160,8 @@ void FunctionalDependence::compute_dependencies(int n) {
 						}
 						if(x_pi_sizeSum - x_pi_length == x_minus_e_pi_sizeSum - x_minus_e_pi_length){
 							getAttr(x_minus_e,e);
-							level_set[n][i].RHS &= (~e);
-							level_set[n][i].RHS &= X;
+							next_level[i].RHS &= (~e);
+							next_level[i].RHS &= X;
 						}
 						break;
 					}
@@ -175,6 +177,7 @@ void FunctionalDependence::compute_dependencies(int n) {
 			it = temp_it;
 		}*/
 	}
+	curr_level = next_level;
 }
 
 bool SortByM1( const fd &v1, const fd &v2)
