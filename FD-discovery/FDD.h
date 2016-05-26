@@ -39,7 +39,7 @@ class FunctionalDependence {
 	vector<int> *SArray;
 	vector<AttrClos> attrClosure;
 	vector<AttrClos> FDClosure;
-	vector<set<int>> BCNFTables;
+	vector<Schema> R_set;
 
 public:
 	FunctionalDependence(int, int);

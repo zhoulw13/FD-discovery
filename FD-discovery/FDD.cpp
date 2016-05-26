@@ -299,7 +299,6 @@ void FunctionalDependence::computeAttrClosure(){
 
 void FunctionalDependence::splitToBCNF(){
 	Schema R;
-	vector<Schema> R_set;
 	// insert the initial table into R_set
 	R.FDs = FDClosure;
 	R.attrClos = attrClosure;
